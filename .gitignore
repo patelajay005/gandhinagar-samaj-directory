@@ -17,6 +17,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Batch files with credentials (security)
+push-to-github.bat
+create-github-repo.bat
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
