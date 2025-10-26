@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Google Apps Script - Visual Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .step {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .step:last-child {
+            border-bottom: none;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .step-content {
+            margin-left: 56px;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Fix "Add Member" Feature</h1>
+            <p>Enable write access to Google Sheets in 5 minutes</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert alert-error">
+                <strong>❌ Current Error:</strong> "Failed to add member to sheet. The API key may need write permissions."
+            </div>
+            
+            <div class="alert">
+                <strong>💡 Why this happens:</strong> Google Sheets API with just an API key can only <em>read</em> data, not write. You need to set up a Google Apps Script Web App to enable adding members.
+            </div>
+            
+            <div class="step">
+                <h2 class="step-title">
+                    <span class="step-number">1</span>
+                    Open Google Apps Script
+                </h2>
+                <div class="step-content">
+                    <p>Go to your Google Sheet and open the script editor:</p>
+                    <ul>
+                        <li>Open: <a href="https://docs.google.com/spreadsheets/d/1775CUAh2xcbZiWF-_9ApU0G17erA2TiT2ARaKdllLSs/edit" target="_blank">Your Google Sheet</a></li>
+                        <li>Click <strong>Extensions</strong> → <strong>Apps Script</strong></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2 class="step-title">
+                    <span class="step-number">2</span>
+                    Copy & Paste the Script
+                </h2>
+                <div class="step-content">
+                    <p>Delete all existing code and paste this:</p>
+                    <div class="code-block">
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (data.action === 'addMember') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const sheet = ss.getSheets()[0];
+      
+      // Get current timestamp
+      const timestamp = new Date();
+      
+      const rowData = [
+        timestamp,  // Timestamp (Column A)
+        data.data.name || '',  // Name (Column B)
+        data.data.village || '',  // Village (Column C)
+        data.data.currentAddress || '',  // Current Address (Column D)
+        data.data.mobile || '',  // Mobile (Column E)
+        data.data.member2Name || '', 
+        data.data.member2Age || '', 
+        data.data.member2Business || '', 
+        data.data.member3Name || '',
+        data.data.member3Age || '', 
+        data.data.member3Business || '',
+        data.data.member4Name || '', 
+        data.data.member4Age || '',
+        data.data.member4Business || '', 
+        data.data.member5Name || '',
+        data.data.member5Age || '', 
+        data.data.member5Business || '',
+        data.data.member6Name || '', 
+        data.data.member6Age || '',
+        data.data.member6Business || '', 
+        data.data.remark || ''
+      ];
+      
+      sheet.appendRow(rowData);
+      
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success', message: 'Member added successfully'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error', message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+                    </div>
+                    <p><strong>Important:</strong> Click the <span class="highlight">Save</span> button (💾) or press Ctrl+S</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2 class="step-title">
+                    <span class="step-number">3</span>
+                    Deploy as Web App
+                </h2>
+                <div class="step-content">
+                    <ol>
+                        <li>Click <strong>Deploy</strong> → <strong>New deployment</strong></li>
+                        <li>Click the gear icon ⚙️ → Select <strong>Web app</strong></li>
+                        <li>Configure settings:
+                            <ul>
+                                <li><strong>Execute as:</strong> Me</li>
+                                <li><strong>Who has access:</strong> Anyone</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>Deploy</strong></li>
+                        <li>Click <strong>Authorize access</strong> → Choose your Google account</li>
+                        <li>Click <strong>Advanced</strong> → <strong>Go to [project name] (unsafe)</strong> → <strong>Allow</strong></li>
+                        <li><span class="highlight">COPY THE WEB APP URL</span> (looks like: https://script.google.com/macros/s/AKfycb.../exec)</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2 class="step-title">
+                    <span class="step-number">4</span>
+                    Update .env File
+                </h2>
+                <div class="step-content">
+                    <p>Open your <code>.env</code> file and add this line:</p>
+                    <div class="code-block">
+VITE_GOOGLE_SCRIPT_WEB_APP_URL=https://script.google.com/macros/s/YOUR_URL_HERE/exec
+                    </div>
+                    <p>Replace <code>YOUR_URL_HERE</code> with the URL you copied in step 3.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2 class="step-title">
+                    <span class="step-number">5</span>
+                    Restart Development Server
+                </h2>
+                <div class="step-content">
+                    <p>In your terminal:</p>
+                    <div class="code-block">
+# Press Ctrl+C to stop the server
+npm run dev
+                    </div>
+                </div>
+            </div>
+            
+            <div class="success-box">
+                <strong>✅ Done!</strong> Now try adding a member. It should work perfectly!
+            </div>
+            
+            <div style="margin-top: 2rem; text-align: center;">
+                <a href="http://localhost:5173" class="btn btn-success">Go to Application</a>
+                <a href="../GOOGLE_APPS_SCRIPT_SETUP.md" class="btn" style="margin-left: 1rem;">Detailed Guide</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
